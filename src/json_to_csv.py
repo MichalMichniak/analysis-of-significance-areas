@@ -35,7 +35,7 @@ def json_to_csv():
         file.write(str(["idx"]+LABELS_DS)[1:-1]+"\n")
         for x,tqdm_temp in zip(enumerate(os.walk("..\BigEarthNet-S2\\BigEarthNet-v1.0")),tqdm(range(database_len))):
             n,x = x
-            name = re.search(r'S2A.*',x[0])
+            name = re.search(r'S2(A|B).*',x[0])
             if name != None:
                 f = open(f"..\BigEarthNet-S2\BigEarthNet-v1.0\{name.group()}\{name.group()}_labels_metadata.json",)
                 data = json.load(f)["labels"]

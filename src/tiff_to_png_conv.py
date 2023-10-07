@@ -19,10 +19,14 @@ if __name__ == '__main__':
     from tqdm import tqdm
     #print(os.walk("..\BigEarthNet-S2\BigEarthNet-v1.0"))
     database_len = 590_326
-    i = 10000
-    for x,tqdm_temp in zip(enumerate(os.walk("..\BigEarthNet-S2\\BigEarthNet-v1.0")),tqdm(range(database_len))):
+    i = database_len + 2
+    k = 590_326
+    enum_dir = enumerate(os.walk("..\BigEarthNet-S2\\BigEarthNet-v1.0"))
+    for i in zip(range(k),tqdm(range(k))):
+        next(enum_dir)
+    for x,tqdm_temp in zip(enum_dir,tqdm(range(k,database_len+1))):
         n,x = x
-        name = re.search(r'S2A.*',x[0])
+        name = re.search(r'S2(A|B).*',x[0])
         if name != None:
             #print(n,name.group())
             tiff_pach_to_png(n,name.group(),"..\BigearthNet_png")
