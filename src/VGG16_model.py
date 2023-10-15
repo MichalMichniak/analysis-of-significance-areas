@@ -23,7 +23,8 @@ class VGG16_model_transfer:
                 torch.nn.Linear(in_features=4096, out_features=4096, bias=True),
                 torch.nn.ReLU(inplace=True),
                 torch.nn.Dropout(p=0.5, inplace=False),
-                torch.nn.Linear(in_features=4096, out_features=n_labels, bias=True)
+                torch.nn.Linear(in_features=4096, out_features=n_labels, bias=True),
+                torch.nn.Sigmoid()
             )
             self.vgg16 = torchvision.models.vgg16_bn(pretrained=True, progress=True)
             self.vgg16.classifier = new_classifier
