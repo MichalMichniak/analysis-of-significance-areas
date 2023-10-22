@@ -4,6 +4,7 @@ from src.Bigearth import Dataloader
 from tqdm import tqdm
 from typing import List, Tuple
 import datetime
+import pandas as pd
 
 class VGG16_model_transfer:
     """
@@ -24,7 +25,7 @@ class VGG16_model_transfer:
                 torch.nn.ReLU(inplace=True),
                 torch.nn.Dropout(p=0.5, inplace=False),
                 torch.nn.Linear(in_features=4096, out_features=n_labels, bias=True),
-                torch.nn.Sigmoid()
+                torch.nn.Softmax()
             )
             self.vgg16 = torchvision.models.vgg16_bn(pretrained=True, progress=True)
             self.vgg16.classifier = new_classifier
@@ -40,7 +41,7 @@ class VGG16_model_transfer:
     def forward_pass(self, x : torch.Tensor):
         return self.vgg16(x.cuda())
     
-    def train(self,nr_epoch, dataloader : Dataloader, learning_rate = 1e-4)->Tuple[List[float],List[float],List[float],List[float]]:
+    def train(self,nr_epoch, dataloader : Dataloader, learning_rate = 1e-3, weight_decay = 0.0)->Tuple[List[float],List[float],List[float],List[float]]:
         """
         param:
             nr_epoch : Uint - number of epochs
@@ -54,7 +55,18 @@ class VGG16_model_transfer:
             train_accuracy : List[float] - training accuracy
             test_accuracy : List[float] - test accuracy
         """
-        best_accuracy = 0.0
+        ### if vgg_model.csv dont exist make it:
+        try:
+            with open(f"./models_logs/vgg_model.csv","r") as to_copy_file:
+                for line in to_copy_file:
+                    pass
+                best_accuracy = float(line.split(sep=',')[3])
+
+        except:
+            with open(f"./models_logs/vgg_model.csv","w") as to_copy_file:
+                pass
+            best_accuracy = 0.0
+        
         path = "./models/vgg_model.pth"
         #TODO: other metrics (f1)
         test_accuracy = []
@@ -62,31 +74,31 @@ class VGG16_model_transfer:
         test_loss = []
         train_loss = []
 
-        mean_loss = 0
-        accuracy = 0
-        optimizer = torch.optim.SGD(self.vgg16.classifier.parameters(), momentum=0.1, lr = learning_rate)
+        mean_loss_tr = 0
+        accuracy_tr = 0
+        optimizer = torch.optim.Adam(self.vgg16.classifier.parameters(), momentum=0.1, lr = learning_rate, weight_decay=weight_decay)
         optimizer.zero_grad()
         loss_func = torch.nn.CrossEntropyLoss()
         for epoch in range(nr_epoch):
             self.vgg16.train()
-            mean_loss = 0
-            accuracy = 0
-            for (n,(x_batch,y_batch)),tqdm_progress in zip(enumerate(dataloader),tqdm(range(len(dataloader)))):
+            mean_loss_tr = 0
+            accuracy_tr = 0
+            for (n,(x_batch,y_batch)),tqdm_progress in zip(enumerate(dataloader),tqdm(range(len(dataloader)-1))):
                 for x,y in zip(x_batch,y_batch):
                     x = torch.unsqueeze(torch.from_numpy(x).T,0)
                     y_pred = self.forward_pass(x)
                     loss = loss_func(y_pred,torch.unsqueeze(torch.from_numpy(y.astype(float)),0).cuda())
                     with torch.no_grad():
-                        mean_loss += loss
+                        mean_loss_tr += loss
                         if torch.argmax(y_pred) == torch.argmax(torch.unsqueeze(torch.from_numpy(y.astype(float)),0).cuda()):
-                            accuracy += 1
+                            accuracy_tr += 1
                     loss.backward()
                 optimizer.step()
                 optimizer.zero_grad()
-            mean_loss = mean_loss/len(dataloader)
-            train_loss.append(float(mean_loss))
-            accuracy = accuracy/len(dataloader)
-            train_accuracy.append(float(accuracy))
+            mean_loss_tr = mean_loss_tr/len(dataloader)
+            train_loss.append(float(mean_loss_tr))
+            accuracy_tr = accuracy_tr/len(dataloader)
+            train_accuracy.append(float(accuracy_tr))
             mean_loss = 0
             accuracy = 0
             self.vgg16.eval()
@@ -103,7 +115,7 @@ class VGG16_model_transfer:
                 test_loss.append(float(mean_loss))
                 accuracy = accuracy/len(dataloader)
                 test_accuracy.append(float(accuracy))
-            if best_accuracy < accuracy:
+            if best_accuracy <= accuracy:
                 torch.save(self.vgg16, path)
                 if(self.new):
                     with open(f"./models_logs/vgg_model.csv","w") as file:
@@ -121,6 +133,7 @@ class VGG16_model_transfer:
                 with open(f"./models_logs/vgg_model.csv","r") as to_copy_file:
                     for line in to_copy_file.readline():
                         file.write(line)
+                    file.write(f"{train_loss[-1]},{test_loss[-1]},{train_accuracy[-1]},{test_accuracy[-1]}\n")
             
-            print(f"EPOCH: {epoch+1}, TEST_LOSS{mean_loss}, TEST_ACCURACY{accuracy}")
+            print(f"EPOCH: {epoch+1}, TEST_LOSS{mean_loss}, TEST_ACCURACY{accuracy}, TRAIN_LOSS{mean_loss}, TTRAIN_ACCURACY{accuracy}")
         return train_loss,test_loss,train_accuracy,test_accuracy

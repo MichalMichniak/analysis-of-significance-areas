@@ -25,7 +25,7 @@ def generate_new_inst(img_num : int,last_idx_empty : int, dataset : Dataset, pat
     cv2.imwrite(f"{path}\{last_idx_empty}.png", cv2.cvtColor(I, cv2.COLOR_RGB2BGR))
     idx2 = last_idx_empty
     last_idx_empty += 1
-    return last_idx_empty, np.array([np.insert(y,0,idx1),np.insert(y,0,idx1)])
+    return last_idx_empty, np.array([np.insert(y,0,idx1),np.insert(y,0,idx2)])
 
 def test_train_split_generate_to_csv(dataset : Dataset, multiplicate : np.ndarray, path : str, test_size=0.2, random_seed = 23421):
     indexes = pd.read_csv("labels_cut.csv")
