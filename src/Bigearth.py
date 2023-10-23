@@ -42,7 +42,7 @@ class Bigearth_Pruned(Dataset):
     def __getitem__(self, index):
         self.X = torchvision.io.read_image(f"C:\D\VS_programs_python\inzynierka\BigearthNet_png\{self.y.iloc[index-1].values[0]}.png")
         self.X = self.X.float().cuda()
-        return self.X, self.y.iloc[index-1].values[1:]
+        return self.X, torch.from_numpy(self.y.iloc[index-1].values[1:]).float().cuda()
     
     def get_y(self, index):
         return self.y.iloc[index-1].values[1:]

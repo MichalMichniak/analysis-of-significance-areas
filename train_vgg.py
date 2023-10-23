@@ -7,7 +7,7 @@ from torch.utils.data import Dataset,DataLoader
 
 if __name__ == "__main__":
     vgg_16 = VGG16_model_transfer()
-    vgg_16.load(13,True,conv_layers_train=True)
+    vgg_16.load(13,False,conv_layers_train=True)
 
     bigearth_dl = Bigearth_Pruned()
     bigearth_dl = Bigearth_Pruned()

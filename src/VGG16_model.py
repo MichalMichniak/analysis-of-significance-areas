@@ -88,8 +88,8 @@ class VGG16_model_transfer:
             for (x_batch,y_batch),tqdm_progress in zip(iter(dataloader),tqdm(range(len(dataloader)-1))):
                 # break
                 y_pred = self.forward_pass(x_batch)
-                loss = loss_func(y_pred,y_batch.float().cuda())
-                accuracy_tr += acc_metric(y_pred,y_batch.float().cuda())
+                loss = loss_func(y_pred,y_batch)
+                accuracy_tr += acc_metric(y_pred,y_batch)
                 ### accuracy on training set
                 # for x,y in zip(x_batch,y_batch):
                 #     # x = torch.unsqueeze(torch.from_numpy(x).T,0)
@@ -113,9 +113,9 @@ class VGG16_model_transfer:
                 for x_batch,y_batch in iter(test_dataloader):
                     # x = torch.unsqueeze(torch.from_numpy(x).T,0)
                     y_pred = self.forward_pass(x_batch)
-                    loss = loss_func(y_pred,y_batch.float().cuda())
+                    loss = loss_func(y_pred,y_batch)
                     mean_loss += loss
-                    accuracy += acc_metric(y_pred,y_batch.float().cuda())
+                    accuracy += acc_metric(y_pred,y_batch)
                     # if torch.argmax(y_pred) == torch.argmax(torch.unsqueeze(torch.from_numpy(y.astype(float)),0).cuda()):
                     #     accuracy += 1
                 mean_loss = float(mean_loss)/len(test_dataloader)
