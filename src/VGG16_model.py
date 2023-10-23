@@ -1,10 +1,11 @@
 import torch
 import torchvision
-from src.Bigearth import Dataloader
+from torch.utils.data import Dataset,DataLoader
 from tqdm import tqdm
 from typing import List, Tuple
 import datetime
 import pandas as pd
+import torchmetrics.classification
 
 class VGG16_model_transfer:
     """
@@ -25,9 +26,9 @@ class VGG16_model_transfer:
                 torch.nn.ReLU(inplace=True),
                 torch.nn.Dropout(p=0.5, inplace=False),
                 torch.nn.Linear(in_features=4096, out_features=n_labels, bias=True),
-                torch.nn.Softmax()
+                torch.nn.Sigmoid()
             )
-            self.vgg16 = torchvision.models.vgg16_bn(pretrained=True, progress=True)
+            self.vgg16 = torchvision.models.vgg16_bn(weights = 'IMAGENET1K_V1', progress=True)
             self.vgg16.classifier = new_classifier
             self.new = True
         else:
@@ -39,9 +40,9 @@ class VGG16_model_transfer:
 
 
     def forward_pass(self, x : torch.Tensor):
-        return self.vgg16(x.cuda())
+        return self.vgg16(x)
     
-    def train(self,nr_epoch, dataloader : Dataloader, learning_rate = 1e-3, weight_decay = 0.0)->Tuple[List[float],List[float],List[float],List[float]]:
+    def train(self,nr_epoch, dataloader : DataLoader, test_dataloader : DataLoader, learning_rate = 1e-3, weight_decay = 0.0)->Tuple[List[float],List[float],List[float],List[float]]:
         """
         param:
             nr_epoch : Uint - number of epochs
@@ -74,46 +75,52 @@ class VGG16_model_transfer:
         test_loss = []
         train_loss = []
 
-        mean_loss_tr = 0
-        accuracy_tr = 0
-        optimizer = torch.optim.Adam(self.vgg16.classifier.parameters(), momentum=0.1, lr = learning_rate, weight_decay=weight_decay)
+        mean_loss_tr = 0.0
+        accuracy_tr = 0.0
+        optimizer = torch.optim.Adam(self.vgg16.classifier.parameters(), lr = learning_rate, weight_decay=weight_decay)
         optimizer.zero_grad()
-        loss_func = torch.nn.CrossEntropyLoss()
+        loss_func = torch.nn.BCELoss()
+        acc_metric = torchmetrics.classification.MultilabelAccuracy(num_labels=13).cuda()
         for epoch in range(nr_epoch):
             self.vgg16.train()
-            mean_loss_tr = 0
-            accuracy_tr = 0
-            for (n,(x_batch,y_batch)),tqdm_progress in zip(enumerate(dataloader),tqdm(range(len(dataloader)-1))):
-                for x,y in zip(x_batch,y_batch):
-                    x = torch.unsqueeze(torch.from_numpy(x).T,0)
-                    y_pred = self.forward_pass(x)
-                    loss = loss_func(y_pred,torch.unsqueeze(torch.from_numpy(y.astype(float)),0).cuda())
-                    with torch.no_grad():
-                        mean_loss_tr += loss
-                        if torch.argmax(y_pred) == torch.argmax(torch.unsqueeze(torch.from_numpy(y.astype(float)),0).cuda()):
-                            accuracy_tr += 1
-                    loss.backward()
+            mean_loss_tr = 0.0
+            accuracy_tr = 0.0
+            for (x_batch,y_batch),tqdm_progress in zip(iter(dataloader),tqdm(range(len(dataloader)-1))):
+                # break
+                y_pred = self.forward_pass(x_batch)
+                loss = loss_func(y_pred,y_batch.float().cuda())
+                accuracy_tr += acc_metric(y_pred,y_batch.float().cuda())
+                ### accuracy on training set
+                # for x,y in zip(x_batch,y_batch):
+                #     # x = torch.unsqueeze(torch.from_numpy(x).T,0)
+                #     y_pred = self.forward_pass(x)
+                #     loss = loss_func(y_pred,torch.unsqueeze(torch.from_numpy(y.astype(float)),0).cuda())
+                #     with torch.no_grad():
+                #         mean_loss_tr += loss
+                #         if torch.argmax(y_pred) == torch.argmax(torch.unsqueeze(torch.from_numpy(y.astype(float)),0).cuda()):
+                #             accuracy_tr += 1
+                loss.backward()
                 optimizer.step()
                 optimizer.zero_grad()
-            mean_loss_tr = mean_loss_tr/len(dataloader)
+            mean_loss_tr = float(mean_loss_tr)/len(dataloader)
             train_loss.append(float(mean_loss_tr))
-            accuracy_tr = accuracy_tr/len(dataloader)
+            accuracy_tr = float(accuracy_tr)/len(dataloader)
             train_accuracy.append(float(accuracy_tr))
-            mean_loss = 0
-            accuracy = 0
+            mean_loss = 0.0
+            accuracy = 0.0
             self.vgg16.eval()
             with torch.no_grad():
-                for no_test in range(dataloader.test_len()):
-                    x,y = dataloader.get_test(no_test)
-                    x = torch.unsqueeze(torch.from_numpy(x).T,0)
-                    y_pred = self.forward_pass(x)
-                    loss = loss_func(y_pred,torch.unsqueeze(torch.from_numpy(y.astype(float)),0).cuda())
+                for x_batch,y_batch in iter(test_dataloader):
+                    # x = torch.unsqueeze(torch.from_numpy(x).T,0)
+                    y_pred = self.forward_pass(x_batch)
+                    loss = loss_func(y_pred,y_batch.float().cuda())
                     mean_loss += loss
-                    if torch.argmax(y_pred) == torch.argmax(torch.unsqueeze(torch.from_numpy(y.astype(float)),0).cuda()):
-                        accuracy += 1
-                mean_loss = mean_loss/len(dataloader)
+                    accuracy += acc_metric(y_pred,y_batch.float().cuda())
+                    # if torch.argmax(y_pred) == torch.argmax(torch.unsqueeze(torch.from_numpy(y.astype(float)),0).cuda()):
+                    #     accuracy += 1
+                mean_loss = float(mean_loss)/len(test_dataloader)
                 test_loss.append(float(mean_loss))
-                accuracy = accuracy/len(dataloader)
+                accuracy = float(accuracy)/len(test_dataloader)
                 test_accuracy.append(float(accuracy))
             if best_accuracy <= accuracy:
                 torch.save(self.vgg16, path)
@@ -135,5 +142,26 @@ class VGG16_model_transfer:
                         file.write(line)
                     file.write(f"{train_loss[-1]},{test_loss[-1]},{train_accuracy[-1]},{test_accuracy[-1]}\n")
             
-            print(f"EPOCH: {epoch+1}, TEST_LOSS{mean_loss}, TEST_ACCURACY{accuracy}, TRAIN_LOSS{mean_loss}, TTRAIN_ACCURACY{accuracy}")
+            print(f"EPOCH: {epoch+1}, TEST_LOSS{test_loss[-1]}, TEST_ACCURACY{test_accuracy[-1]}, TRAIN_LOSS{train_loss[-1]}, TRAIN_ACCURACY{train_accuracy[-1]}")
         return train_loss,test_loss,train_accuracy,test_accuracy
+    
+
+
+
+if __name__ == "__main__":
+    from dataset_info import *
+    import torch
+
+    vgg_16 = VGG16_model_transfer()
+    vgg_16.load(13,True,conv_layers_train=True)
+
+    from Bigearth import Bigearth_Pruned, Train_Dataset, Test_Dataset
+    from torch.utils.data import Dataset,DataLoader
+    bigearth_dl = Bigearth_Pruned()
+    bigearth_dl = Bigearth_Pruned()
+    dataset = Train_Dataset(bigearth_dl,batch_len=8)
+    test_dataset = Test_Dataset(bigearth_dl,batch_len=8)
+    dataloader = DataLoader(dataset=dataset, batch_size=8,shuffle= True,num_workers=2 )
+    test_dataloader = DataLoader(dataset=test_dataset, batch_size=8,shuffle= True,num_workers=2 )
+
+    train_loss,test_loss,train_accuracy,test_accuracy = vgg_16.train(2,dataloader,test_dataloader)

@@ -28,7 +28,7 @@ def generate_new_inst(img_num : int,last_idx_empty : int, dataset : Dataset, pat
     return last_idx_empty, np.array([np.insert(y,0,idx1),np.insert(y,0,idx2)])
 
 def test_train_split_generate_to_csv(dataset : Dataset, multiplicate : np.ndarray, path : str, test_size=0.2, random_seed = 23421):
-    indexes = pd.read_csv("labels_cut.csv")
+    indexes = pd.read_csv("./labels/labels_cut.csv")
     train , test = sklearn.model_selection.train_test_split(indexes, test_size=test_size, random_state=random_seed)
     last_idx_empty = dataset.get_start_generated()
     for img_num, tqdm_ in zip(train["idx"],tqdm(range(1,train["idx"].__len__()+1))):
@@ -36,8 +36,8 @@ def test_train_split_generate_to_csv(dataset : Dataset, multiplicate : np.ndarra
         if(sum(y * (multiplicate - 1))>0):
             last_idx_empty, train_append = generate_new_inst(img_num, last_idx_empty, dataset, path)
             train = train.append(pd.DataFrame(train_append, columns=train.columns), ignore_index=True)
-    train.to_csv("train_labels.csv", index=False)
-    test.to_csv("test_labels.csv", index=False)
+    train.to_csv("./labels/train_labels.csv", index=False)
+    test.to_csv("./labels/test_labels.csv", index=False)
 
 
 if __name__ == '__main__':

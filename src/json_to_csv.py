@@ -31,7 +31,7 @@ def json_to_csv():
     database_len = 590_326
     print(len(labels))
     i = database_len
-    with open("./labels.csv","w") as file:
+    with open("./labels/labels.csv","w") as file:
         file.write(str(["idx"]+LABELS_DS)[1:-1]+"\n")
         for x,tqdm_temp in zip(enumerate(os.walk("..\BigEarthNet-S2\\BigEarthNet-v1.0")),tqdm(range(database_len))):
             n,x = x
