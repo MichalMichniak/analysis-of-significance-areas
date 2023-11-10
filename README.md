@@ -1,4 +1,4 @@
 # analysis-of-significance-areas
 Plan:
-- [ ] VGG16
-- [ ] ...
+- [x] VGG16
+- [ ] VGG16 train

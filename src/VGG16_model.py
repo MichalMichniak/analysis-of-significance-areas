@@ -17,6 +17,8 @@ class VGG16_model_transfer:
 
     def load(self, n_labels, new = False, conv_layers_train = False) -> None:
         #self.cuda = torch.device('cuda')
+        self.n_labels = n_labels
+        self.conv_layers_train = conv_layers_train
         if(new):
             new_classifier = torch.nn.Sequential(
                 torch.nn.Linear(in_features=25088, out_features=4096, bias=True),
@@ -26,7 +28,7 @@ class VGG16_model_transfer:
                 torch.nn.ReLU(inplace=True),
                 torch.nn.Dropout(p=0.5, inplace=False),
                 torch.nn.Linear(in_features=4096, out_features=n_labels, bias=True),
-                torch.nn.Sigmoid()
+                torch.nn.Softmax()
             )
             self.vgg16 = torchvision.models.vgg16_bn(weights = 'IMAGENET1K_V1', progress=True)
             self.vgg16.classifier = new_classifier
@@ -77,16 +79,21 @@ class VGG16_model_transfer:
 
         mean_loss_tr = 0.0
         accuracy_tr = 0.0
-        optimizer = torch.optim.Adam(self.vgg16.classifier.parameters(), lr = learning_rate, weight_decay=weight_decay)
+        if self.conv_layers_train:
+            optimizer = torch.optim.Adam(self.vgg16.parameters(), lr = learning_rate, weight_decay=weight_decay)
+        else:
+            optimizer = torch.optim.Adam(self.vgg16.features.parameters(), lr = learning_rate, weight_decay=weight_decay)
         optimizer.zero_grad()
-        loss_func = torch.nn.BCELoss()
-        acc_metric = torchmetrics.classification.MultilabelAccuracy(num_labels=13).cuda()
+        loss_func = torch.nn.CrossEntropyLoss()
+        acc_metric = torchmetrics.classification.Accuracy(task="multiclass",num_classes=self.n_labels).cuda()
         for epoch in range(nr_epoch):
             self.vgg16.train()
             mean_loss_tr = 0.0
             accuracy_tr = 0.0
             for (x_batch,y_batch),tqdm_progress in zip(iter(dataloader),tqdm(range(len(dataloader)-1))):
                 # break
+                x_batch = x_batch.cuda()
+                y_batch = y_batch.cuda()
                 y_pred = self.forward_pass(x_batch)
                 loss = loss_func(y_pred,y_batch)
                 accuracy_tr += acc_metric(y_pred,y_batch)
@@ -99,6 +106,7 @@ class VGG16_model_transfer:
                 #         mean_loss_tr += loss
                 #         if torch.argmax(y_pred) == torch.argmax(torch.unsqueeze(torch.from_numpy(y.astype(float)),0).cuda()):
                 #             accuracy_tr += 1
+                mean_loss_tr += loss
                 loss.backward()
                 optimizer.step()
                 optimizer.zero_grad()
@@ -112,6 +120,8 @@ class VGG16_model_transfer:
             with torch.no_grad():
                 for x_batch,y_batch in iter(test_dataloader):
                     # x = torch.unsqueeze(torch.from_numpy(x).T,0)
+                    x_batch = x_batch.cuda()
+                    y_batch = y_batch.cuda()
                     y_pred = self.forward_pass(x_batch)
                     loss = loss_func(y_pred,y_batch)
                     mean_loss += loss
@@ -126,22 +136,24 @@ class VGG16_model_transfer:
                 torch.save(self.vgg16, path)
                 if(self.new):
                     with open(f"./models_logs/vgg_model.csv","w") as file:
-                        file.write(f"{train_loss[-1]},{test_loss[-1]},{train_accuracy[-1]},{test_accuracy[-1]}\n")
+                        file.write(f"{train_loss[-1]},{test_loss[-1]},{train_accuracy[-1]},{test_accuracy[-1]},{epoch}\n")
                     self.new = False
                 else:
                     with open(f"./models_logs/vgg_model.csv","a") as file:
-                        file.write(f"{train_loss[-1]},{test_loss[-1]},{train_accuracy[-1]},{test_accuracy[-1]}\n")
-            date = f"{datetime.datetime.now()}"
-            date = "_".join(date.split())
-            date = "_".join(date.split(":"))
-            date = "_".join(date.split("."))
-            torch.save(self.vgg16, f"./models/vgg_{date}.pth")
-            with open(f"./models_logs/vgg_{date}.csv","w") as file:
-                with open(f"./models_logs/vgg_model.csv","r") as to_copy_file:
-                    for line in to_copy_file.readline():
-                        file.write(line)
-                    file.write(f"{train_loss[-1]},{test_loss[-1]},{train_accuracy[-1]},{test_accuracy[-1]}\n")
-            
+                        file.write(f"{train_loss[-1]},{test_loss[-1]},{train_accuracy[-1]},{test_accuracy[-1]},{epoch}\n")
+                
+            if(epoch%5== 0):
+                date = f"{datetime.datetime.now()}"
+                date = "_".join(date.split())
+                date = "_".join(date.split(":"))
+                date = "_".join(date.split("."))
+                torch.save(self.vgg16, f"./models/vgg_{date}.pth")
+                with open(f"./models_logs/vgg_{date}.csv","w") as file:
+                    with open(f"./models_logs/vgg_model.csv","r") as to_copy_file:
+                        for line in to_copy_file.readline():
+                            file.write(line)
+                        file.write(f"{train_loss[-1]},{test_loss[-1]},{train_accuracy[-1]},{test_accuracy[-1]},{epoch}\n")
+                
             print(f"EPOCH: {epoch+1}, TEST_LOSS{test_loss[-1]}, TEST_ACCURACY{test_accuracy[-1]}, TRAIN_LOSS{train_loss[-1]}, TRAIN_ACCURACY{train_accuracy[-1]}")
         return train_loss,test_loss,train_accuracy,test_accuracy
     
