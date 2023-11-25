@@ -24,13 +24,12 @@ class VGG16_model_transfer:
                 torch.nn.Linear(in_features=25088, out_features=4096, bias=True),
                 torch.nn.ReLU(inplace=True),
                 torch.nn.Dropout(p=0.5, inplace=False),
-                torch.nn.Linear(in_features=4096, out_features=4096, bias=True),
-                torch.nn.ReLU(inplace=True),
+                torch.nn.Linear(in_features=4096, out_features=256, bias=True),
                 torch.nn.Dropout(p=0.5, inplace=False),
-                torch.nn.Linear(in_features=4096, out_features=n_labels, bias=True),
+                torch.nn.Linear(in_features=256, out_features=n_labels, bias=True),
                 torch.nn.Softmax()
             )
-            self.vgg16 = torchvision.models.vgg16_bn(weights = 'IMAGENET1K_V1', progress=True)
+            self.vgg16 = torchvision.models.vgg16(weights = 'DEFAULT', progress=True)
             self.vgg16.classifier = new_classifier
             self.new = True
         else:
@@ -160,20 +159,20 @@ class VGG16_model_transfer:
 
 
 
-if __name__ == "__main__":
-    from dataset_info import *
-    import torch
+# if __name__ == "__main__":
+#     from dataset_info import *
+#     import torch
 
-    vgg_16 = VGG16_model_transfer()
-    vgg_16.load(13,True,conv_layers_train=True)
+#     vgg_16 = VGG16_model_transfer()
+#     vgg_16.load(13,True,conv_layers_train=True)
 
-    from Bigearth import Bigearth_Pruned, Train_Dataset, Test_Dataset
-    from torch.utils.data import Dataset,DataLoader
-    bigearth_dl = Bigearth_Pruned()
-    bigearth_dl = Bigearth_Pruned()
-    dataset = Train_Dataset(bigearth_dl,batch_len=8)
-    test_dataset = Test_Dataset(bigearth_dl,batch_len=8)
-    dataloader = DataLoader(dataset=dataset, batch_size=8,shuffle= True,num_workers=2 )
-    test_dataloader = DataLoader(dataset=test_dataset, batch_size=8,shuffle= True,num_workers=2 )
+#     from Bigearth import Bigearth_Pruned, Train_Dataset, Test_Dataset
+#     from torch.utils.data import Dataset,DataLoader
+#     bigearth_dl = Bigearth_Pruned()
+#     bigearth_dl = Bigearth_Pruned()
+#     dataset = Train_Dataset(bigearth_dl,batch_len=8)
+#     test_dataset = Test_Dataset(bigearth_dl,batch_len=8)
+#     dataloader = DataLoader(dataset=dataset, batch_size=8,shuffle= True,num_workers=2 )
+#     test_dataloader = DataLoader(dataset=test_dataset, batch_size=8,shuffle= True,num_workers=2 )
 
-    train_loss,test_loss,train_accuracy,test_accuracy = vgg_16.train(2,dataloader,test_dataloader)
+#     train_loss,test_loss,train_accuracy,test_accuracy = vgg_16.train(2,dataloader,test_dataloader)
