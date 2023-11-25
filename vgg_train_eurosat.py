@@ -31,7 +31,7 @@ if __name__ == '__main__':
     test_dataloader = DataLoader(dataset=ds_test, batch_size=32,shuffle=True,num_workers=3)
     vgg_16 = VGG16_model_transfer()
     vgg_16.load(10,False,conv_layers_train=True)
-    train_loss,test_loss,train_accuracy,test_accuracy = vgg_16.train(26,train_dataloader,test_dataloader)
+    train_loss,test_loss,train_accuracy,test_accuracy = vgg_16.train(51,train_dataloader,test_dataloader)
     print(train_loss,test_loss,train_accuracy,test_accuracy)
     date = f"{datetime.datetime.now()}"
     date = "_".join(date.split())
