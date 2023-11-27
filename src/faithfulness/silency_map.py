@@ -46,7 +46,7 @@ class Silency_map_gen:
         input_tensor = eurosat_perturbation(self.ds[nr][0],mask).unsqueeze(0).cuda()
         return self.get_silency_map_(input_tensor,targets, cam_type)
 
-    def get_pair_sailency(self,nr, tr_fc = thr_fc,targets = None, cam_type = "grad_cam", perturbation_func = eurosat_perturbation):
+    def get_pair_sailency(self,nr, tr_fc = thr_fc,targets = None, cam_type = "grad_cam", perturbation_func = eurosat_perturbation, return_pred = False):
         input_tensor = self.ds[nr][0].unsqueeze(0).cuda()
         ground_truth_map = self.get_silency_map_(input_tensor,targets, cam_type)
         if targets is None:
@@ -55,5 +55,7 @@ class Silency_map_gen:
 
         mask = tr_fc(ground_truth_map)
         perturbated_map = self.get_perturbated_silency_map(nr ,mask ,targets, cam_type, perturbation_func, tr_fc)
+        if return_pred:
+            return ground_truth_map, perturbated_map,np.argmax(pred.cpu().detach().numpy())
         return ground_truth_map, perturbated_map
     
