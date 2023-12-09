@@ -45,6 +45,8 @@ def SIM_func(sl_map, pert_sl_map, no_bins = 20, show = False):
     upper = np.max([np.max(sl_map),np.max(pert_sl_map)])
     hist_sl = torch.histogram(torch.from_numpy(sl_map),no_bins,range=(0.0,upper),density = True)
     hist_pert_sl = torch.histogram(torch.from_numpy(pert_sl_map),no_bins,range=(0.0,upper),density = True)
+    hist_sl = hist_sl*hist_sl.bin_edges.numpy()[1]
+    hist_pert_sl = hist_pert_sl*hist_pert_sl.bin_edges.numpy()[1]
     if show:
         plt.plot(hist_sl.bin_edges.numpy()[1:],hist_sl.hist.numpy())
         plt.show()
@@ -66,6 +68,8 @@ def CC_func(sl_map, pert_sl_map, no_bins = 20, show = False):
         return 0
     hist_sl = torch.histogram(torch.from_numpy(sl_map),no_bins,range=(0.0,upper),density = True)
     hist_pert_sl = torch.histogram(torch.from_numpy(pert_sl_map),no_bins,range=(0.0,upper),density = True)
+    hist_sl = hist_sl*hist_sl.bin_edges.numpy()[1]
+    hist_pert_sl = hist_pert_sl*hist_pert_sl.bin_edges.numpy()[1]
     if show:
         plt.plot(hist_sl.bin_edges.numpy()[1:],hist_sl.hist.numpy())
         plt.show()
