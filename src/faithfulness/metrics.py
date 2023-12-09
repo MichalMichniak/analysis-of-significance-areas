@@ -45,15 +45,15 @@ def SIM_func(sl_map, pert_sl_map, no_bins = 20, show = False):
     upper = np.max([np.max(sl_map),np.max(pert_sl_map)])
     hist_sl = torch.histogram(torch.from_numpy(sl_map),no_bins,range=(0.0,upper),density = True)
     hist_pert_sl = torch.histogram(torch.from_numpy(pert_sl_map),no_bins,range=(0.0,upper),density = True)
-    hist_sl = hist_sl*hist_sl.bin_edges.numpy()[1]
-    hist_pert_sl = hist_pert_sl*hist_pert_sl.bin_edges.numpy()[1]
+    hist_sl_np = hist_sl.hist.numpy()*hist_sl.bin_edges.numpy()[1]
+    hist_pert_sl_np = hist_pert_sl.hist.numpy()*hist_pert_sl.bin_edges.numpy()[1]
     if show:
         plt.plot(hist_sl.bin_edges.numpy()[1:],hist_sl.hist.numpy())
         plt.show()
         plt.plot(hist_pert_sl.bin_edges.numpy()[1:],hist_pert_sl.hist.numpy())
         plt.show()
     
-    return np.sum(np.minimum(hist_sl.hist.numpy(),hist_pert_sl.hist.numpy()))
+    return np.sum(np.minimum(hist_sl_np,hist_pert_sl_np))
 
 def CC_func(sl_map, pert_sl_map, no_bins = 20, show = False):
     """
@@ -65,23 +65,23 @@ def CC_func(sl_map, pert_sl_map, no_bins = 20, show = False):
     """
     upper = np.max([np.max(sl_map),np.max(pert_sl_map)])
     if upper == 0:
-        return 0
+        return 1
     hist_sl = torch.histogram(torch.from_numpy(sl_map),no_bins,range=(0.0,upper),density = True)
     hist_pert_sl = torch.histogram(torch.from_numpy(pert_sl_map),no_bins,range=(0.0,upper),density = True)
-    hist_sl = hist_sl*hist_sl.bin_edges.numpy()[1]
-    hist_pert_sl = hist_pert_sl*hist_pert_sl.bin_edges.numpy()[1]
+    hist_sl_np = hist_sl.hist.numpy()*hist_sl.bin_edges.numpy()[1]
+    hist_pert_sl_np = hist_pert_sl.hist.numpy()*hist_pert_sl.bin_edges.numpy()[1]
     if show:
         plt.plot(hist_sl.bin_edges.numpy()[1:],hist_sl.hist.numpy())
         plt.show()
         plt.plot(hist_pert_sl.bin_edges.numpy()[1:],hist_pert_sl.hist.numpy())
         plt.show()
-    temp = np.std(hist_sl.hist.numpy())*np.std(hist_pert_sl.hist.numpy())
+    temp = np.sqrt(np.mean((hist_sl_np*np.linspace(0,1,no_bins)-np.mean(hist_sl_np*np.linspace(0,1,no_bins)))**2)*np.mean((hist_pert_sl_np*np.linspace(0,1,no_bins)-np.mean(hist_pert_sl_np*np.linspace(0,1,no_bins)))**2))
     if temp == 0:
-        if (np.mean(hist_sl.hist.numpy()) == np.mean(hist_pert_sl.hist.numpy())) and (np.std(hist_sl.hist.numpy()) == np.std(hist_pert_sl.hist.numpy())):
+        if (np.mean(hist_sl_np) == np.mean(hist_pert_sl_np)) and (np.std(hist_sl_np) == np.std(hist_pert_sl_np)):
             return 1
         return 0
-    cc = np.mean((hist_sl.hist.numpy()-np.mean(hist_sl.hist.numpy()))*(hist_pert_sl.hist.numpy()-np.mean(hist_pert_sl.hist.numpy())))/(temp)
+    cc = np.mean((hist_sl_np*np.linspace(0,1,no_bins)-np.mean(hist_sl_np*np.linspace(0,1,no_bins)))*(hist_pert_sl_np*np.linspace(0,1,no_bins)-np.mean(hist_pert_sl_np*np.linspace(0,1,no_bins))))/(temp)
     if np.isnan(cc):
         return 0
-    return np.mean((hist_sl.hist.numpy()-np.mean(hist_sl.hist.numpy()))*(hist_pert_sl.hist.numpy()-np.mean(hist_pert_sl.hist.numpy())))/(temp)
+    return cc
 
