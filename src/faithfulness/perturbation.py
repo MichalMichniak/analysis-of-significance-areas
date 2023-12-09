@@ -4,7 +4,7 @@ from torchvision.transforms import Resize
 
 def thr_fc(silency_map):
     """
-    binaryzation of silency map
+    weighted mask of silency map
     """
     silency_map = (silency_map > np.mean(silency_map))*(silency_map-np.mean(silency_map))/(np.max(silency_map)-np.mean(silency_map))
     return silency_map
