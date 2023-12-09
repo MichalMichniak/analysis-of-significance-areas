@@ -90,21 +90,11 @@ class ResNet50_model_transfer:
             mean_loss_tr = 0.0
             accuracy_tr = 0.0
             for (x_batch,y_batch),tqdm_progress in zip(iter(dataloader),tqdm(range(len(dataloader)-1))):
-                # break
                 x_batch = x_batch.cuda()
                 y_batch = y_batch.cuda()
                 y_pred = self.forward_pass(x_batch)
                 loss = loss_func(y_pred,y_batch)
                 accuracy_tr += acc_metric(y_pred,torch.argmax(y_batch, dim=1))
-                ### accuracy on training set
-                # for x,y in zip(x_batch,y_batch):
-                #     # x = torch.unsqueeze(torch.from_numpy(x).T,0)
-                #     y_pred = self.forward_pass(x)
-                #     loss = loss_func(y_pred,torch.unsqueeze(torch.from_numpy(y.astype(float)),0).cuda())
-                #     with torch.no_grad():
-                #         mean_loss_tr += loss
-                #         if torch.argmax(y_pred) == torch.argmax(torch.unsqueeze(torch.from_numpy(y.astype(float)),0).cuda()):
-                #             accuracy_tr += 1
                 mean_loss_tr += loss
                 loss.backward()
                 optimizer.step()

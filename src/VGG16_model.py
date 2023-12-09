@@ -90,21 +90,11 @@ class VGG16_model_transfer:
             mean_loss_tr = 0.0
             accuracy_tr = 0.0
             for (x_batch,y_batch),tqdm_progress in zip(iter(dataloader),tqdm(range(len(dataloader)-1))):
-                # break
                 x_batch = x_batch.cuda()
                 y_batch = y_batch.cuda()
                 y_pred = self.forward_pass(x_batch)
                 loss = loss_func(y_pred,y_batch)
                 accuracy_tr += acc_metric(y_pred,y_batch)
-                ### accuracy on training set
-                # for x,y in zip(x_batch,y_batch):
-                #     # x = torch.unsqueeze(torch.from_numpy(x).T,0)
-                #     y_pred = self.forward_pass(x)
-                #     loss = loss_func(y_pred,torch.unsqueeze(torch.from_numpy(y.astype(float)),0).cuda())
-                #     with torch.no_grad():
-                #         mean_loss_tr += loss
-                #         if torch.argmax(y_pred) == torch.argmax(torch.unsqueeze(torch.from_numpy(y.astype(float)),0).cuda()):
-                #             accuracy_tr += 1
                 mean_loss_tr += loss
                 loss.backward()
                 optimizer.step()
@@ -125,8 +115,6 @@ class VGG16_model_transfer:
                     loss = loss_func(y_pred,y_batch)
                     mean_loss += loss
                     accuracy += acc_metric(y_pred,y_batch)
-                    # if torch.argmax(y_pred) == torch.argmax(torch.unsqueeze(torch.from_numpy(y.astype(float)),0).cuda()):
-                    #     accuracy += 1
                 mean_loss = float(mean_loss)/len(test_dataloader)
                 test_loss.append(float(mean_loss))
                 accuracy = float(accuracy)/len(test_dataloader)
@@ -157,22 +145,3 @@ class VGG16_model_transfer:
         return train_loss,test_loss,train_accuracy,test_accuracy
     
 
-
-
-# if __name__ == "__main__":
-#     from dataset_info import *
-#     import torch
-
-#     vgg_16 = VGG16_model_transfer()
-#     vgg_16.load(13,True,conv_layers_train=True)
-
-#     from Bigearth import Bigearth_Pruned, Train_Dataset, Test_Dataset
-#     from torch.utils.data import Dataset,DataLoader
-#     bigearth_dl = Bigearth_Pruned()
-#     bigearth_dl = Bigearth_Pruned()
-#     dataset = Train_Dataset(bigearth_dl,batch_len=8)
-#     test_dataset = Test_Dataset(bigearth_dl,batch_len=8)
-#     dataloader = DataLoader(dataset=dataset, batch_size=8,shuffle= True,num_workers=2 )
-#     test_dataloader = DataLoader(dataset=test_dataset, batch_size=8,shuffle= True,num_workers=2 )
-
-#     train_loss,test_loss,train_accuracy,test_accuracy = vgg_16.train(2,dataloader,test_dataloader)
