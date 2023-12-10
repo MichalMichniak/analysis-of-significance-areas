@@ -20,7 +20,6 @@ def NSS_func(sl_map, pert_sl_map, tr_fc = thr_fc_bin):
         return 0
     return sum_of_pixel_path/float(count)
 
-
 def IG_func(sl_map, pert_sl_map, baseline_sl_map, e=1, tr_fc = thr_fc_bin):
     sl_map_bin = tr_fc(sl_map)
     count = 0
@@ -41,6 +40,13 @@ def MSE_func(sil_gen, nr, model, perturbation_fc = eurosat_perturbation):
     y_pert = model(input_tensor_pert)
     return float(torch.sum(((y-y_pert))**2).cpu())
 
+def MSE_func_mask(pert_input, sil_gen, nr, model, perturbation_fc = eurosat_perturbation):
+    input_tensor_pert = pert_input
+    input_tensor = sil_gen.ds[nr][0].unsqueeze(0).cuda()
+    y = model(input_tensor)
+    y_pert = model(input_tensor_pert)
+    return float(torch.sum(((y-y_pert))**2).cpu())
+
 def SIM_func(sl_map, pert_sl_map, no_bins = 20, show = False):
     upper = np.max([np.max(sl_map),np.max(pert_sl_map)])
     hist_sl = torch.histogram(torch.from_numpy(sl_map),no_bins,range=(0.0,upper),density = True)
@@ -52,7 +58,6 @@ def SIM_func(sl_map, pert_sl_map, no_bins = 20, show = False):
         plt.show()
         plt.plot(hist_pert_sl.bin_edges.numpy()[1:],hist_pert_sl.hist.numpy())
         plt.show()
-    
     return np.sum(np.minimum(hist_sl_np,hist_pert_sl_np))
 
 def CC_func(sl_map, pert_sl_map, no_bins = 20, show = False):

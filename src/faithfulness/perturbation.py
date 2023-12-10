@@ -2,11 +2,11 @@ import numpy as np
 import torch
 from torchvision.transforms import Resize
 
-def thr_fc(silency_map):
+def thr_fc(silency_map, scale=1):
     """
     weighted mask of silency map
     """
-    silency_map = (silency_map > np.mean(silency_map))*(silency_map-np.mean(silency_map))/(np.max(silency_map)-np.mean(silency_map))
+    silency_map = (silency_map > np.mean(silency_map))*(silency_map-np.mean(silency_map))*scale/(np.max(silency_map)-np.mean(silency_map))
     return silency_map
 
 def thr_fc_bin(silency_map):
