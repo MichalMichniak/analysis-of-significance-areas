@@ -6,9 +6,9 @@ import matplotlib.pyplot as plt
 def NSS_func(sl_map, pert_sl_map, tr_fc = thr_fc_bin):
     sl_map_bin = tr_fc(sl_map)
     if(np.std(pert_sl_map) != 0):
-        sl_map_norm = (sl_map-np.mean(pert_sl_map))/(2*np.std(pert_sl_map))
+        sl_map_norm = (pert_sl_map-np.mean(pert_sl_map))/(np.std(pert_sl_map))
     else:
-        sl_map_norm = (sl_map-np.mean(pert_sl_map))
+        sl_map_norm = (pert_sl_map-np.mean(pert_sl_map))
     sum_of_pixel_path = 0.0
     count = 0
     for i in range(len(sl_map)):
@@ -29,6 +29,8 @@ def IG_func(sl_map, pert_sl_map, baseline_sl_map, e=1, tr_fc = thr_fc_bin):
             if(sl_map_bin[i][j] == 1):
                 sum_of_pixel += np.log2(pert_sl_map[i][j] + e) - np.log2(baseline_sl_map[i][j] + e)
                 count += 1
+    if count == 0:
+        return 0
     return sum_of_pixel/float(count)
 
 
