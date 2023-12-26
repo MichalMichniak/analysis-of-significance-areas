@@ -23,8 +23,8 @@ class ResNet50_model_transfer:
             new_classifier = torch.nn.Sequential(
                 torch.nn.Linear(in_features=2048, out_features=1000, bias=True),
                 torch.nn.Sigmoid(),
+                torch.nn.Dropout(p=0.5, inplace=False),
                 torch.nn.Linear(in_features=1000, out_features=n_labels, bias=True),
-                torch.nn.Softmax()
             )
             self.resnet50 = torchvision.models.resnet50(pretrained=True, progress=True)
             self.resnet50.fc = new_classifier
@@ -75,7 +75,7 @@ class ResNet50_model_transfer:
         train_accuracy = []
         test_loss = []
         train_loss = []
-
+        softmax = torch.nn.Softmax(dim=1)
         mean_loss_tr = 0.0
         accuracy_tr = 0.0
         if self.conv_layers_train:
@@ -94,7 +94,7 @@ class ResNet50_model_transfer:
                 y_batch = y_batch.cuda()
                 y_pred = self.forward_pass(x_batch)
                 loss = loss_func(y_pred,y_batch)
-                accuracy_tr += acc_metric(y_pred,torch.argmax(y_batch, dim=1))
+                accuracy_tr += acc_metric(softmax(y_pred),torch.argmax(y_batch, dim=1))
                 mean_loss_tr += loss
                 loss.backward()
                 optimizer.step()
@@ -114,7 +114,7 @@ class ResNet50_model_transfer:
                     y_pred = self.forward_pass(x_batch)
                     loss = loss_func(y_pred,y_batch)
                     mean_loss += loss
-                    accuracy += acc_metric(y_pred,torch.argmax(y_batch, dim=1))
+                    accuracy += acc_metric(softmax(y_pred),torch.argmax(y_batch, dim=1))
                     # if torch.argmax(y_pred) == torch.argmax(torch.unsqueeze(torch.from_numpy(y.astype(float)),0).cuda()):
                     #     accuracy += 1
                 mean_loss = float(mean_loss)/len(test_dataloader)
@@ -122,6 +122,7 @@ class ResNet50_model_transfer:
                 accuracy = float(accuracy)/len(test_dataloader)
                 test_accuracy.append(float(accuracy))
             if best_accuracy <= accuracy:
+                best_accuracy = accuracy
                 torch.save(self.resnet50, path)
                 if(self.new):
                     with open(f"./models_logs/resnet50_model.csv","w") as file:

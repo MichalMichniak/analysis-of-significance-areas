@@ -24,10 +24,12 @@ class VGG16_model_transfer:
                 torch.nn.Linear(in_features=25088, out_features=4096, bias=True),
                 torch.nn.ReLU(inplace=True),
                 torch.nn.Dropout(p=0.5, inplace=False),
+                torch.nn.Linear(in_features=4096, out_features=4096, bias=True),
+                torch.nn.ReLU(inplace=True),
+                torch.nn.Dropout(p=0.5, inplace=False),
                 torch.nn.Linear(in_features=4096, out_features=256, bias=True),
                 torch.nn.Dropout(p=0.5, inplace=False),
                 torch.nn.Linear(in_features=256, out_features=n_labels, bias=True),
-                torch.nn.Softmax()
             )
             self.vgg16 = torchvision.models.vgg16(weights = 'DEFAULT', progress=True)
             self.vgg16.classifier = new_classifier
@@ -75,13 +77,13 @@ class VGG16_model_transfer:
         train_accuracy = []
         test_loss = []
         train_loss = []
-
+        softmax = torch.nn.Softmax(dim=1)
         mean_loss_tr = 0.0
         accuracy_tr = 0.0
         if self.conv_layers_train:
             optimizer = torch.optim.Adam(self.vgg16.parameters(), lr = learning_rate, weight_decay=weight_decay)
         else:
-            optimizer = torch.optim.Adam(self.vgg16.features.parameters(), lr = learning_rate, weight_decay=weight_decay)
+            optimizer = torch.optim.Adam(self.vgg16.classifier.parameters(), lr = learning_rate, weight_decay=weight_decay)
         optimizer.zero_grad()
         loss_func = torch.nn.CrossEntropyLoss()
         acc_metric = torchmetrics.classification.Accuracy(task="multiclass",num_classes=self.n_labels).cuda()
@@ -94,7 +96,7 @@ class VGG16_model_transfer:
                 y_batch = y_batch.cuda()
                 y_pred = self.forward_pass(x_batch)
                 loss = loss_func(y_pred,y_batch)
-                accuracy_tr += acc_metric(y_pred,y_batch)
+                accuracy_tr += acc_metric(softmax(y_pred),torch.argmax(y_batch, dim=1))
                 mean_loss_tr += loss
                 loss.backward()
                 optimizer.step()
@@ -114,12 +116,13 @@ class VGG16_model_transfer:
                     y_pred = self.forward_pass(x_batch)
                     loss = loss_func(y_pred,y_batch)
                     mean_loss += loss
-                    accuracy += acc_metric(y_pred,y_batch)
+                    accuracy += acc_metric(softmax(y_pred),torch.argmax(y_batch, dim=1))
                 mean_loss = float(mean_loss)/len(test_dataloader)
                 test_loss.append(float(mean_loss))
                 accuracy = float(accuracy)/len(test_dataloader)
                 test_accuracy.append(float(accuracy))
             if best_accuracy <= accuracy:
+                best_accuracy = accuracy
                 torch.save(self.vgg16, path)
                 if(self.new):
                     with open(f"./models_logs/vgg_model.csv","w") as file:
@@ -143,5 +146,3 @@ class VGG16_model_transfer:
                 
             print(f"EPOCH: {epoch+1}, TEST_LOSS{test_loss[-1]}, TEST_ACCURACY{test_accuracy[-1]}, TRAIN_LOSS{train_loss[-1]}, TRAIN_ACCURACY{train_accuracy[-1]}")
         return train_loss,test_loss,train_accuracy,test_accuracy
-    
-
