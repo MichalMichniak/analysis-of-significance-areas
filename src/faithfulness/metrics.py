@@ -43,10 +43,6 @@ def IG_func(sl_map, pert_sl_map, baseline_sl_map, e=1, tr_fc = thr_fc_bin):
 
 
 def MSE_func(sil_gen, nr, model, perturbation_fc = eurosat_perturbation):
-    if np.isnan(sl_map).any():
-        sl_map = np.nan_to_num(sl_map)
-    if np.isnan(pert_sl_map).any():
-        pert_sl_map = np.nan_to_num(pert_sl_map)
     mask = sil_gen.get_silency_map(nr)
     input_tensor_pert = perturbation_fc(sil_gen.ds[nr][0],mask).unsqueeze(0).cuda()
     input_tensor = sil_gen.ds[nr][0].unsqueeze(0).cuda()
