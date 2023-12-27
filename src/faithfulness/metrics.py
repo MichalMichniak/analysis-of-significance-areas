@@ -4,6 +4,10 @@ import torch
 import matplotlib.pyplot as plt
 
 def NSS_func(sl_map, pert_sl_map, tr_fc = thr_fc_bin):
+    if np.isnan(sl_map).any():
+        sl_map = np.nan_to_num(sl_map)
+    if np.isnan(pert_sl_map).any():
+        pert_sl_map = np.nan_to_num(pert_sl_map)
     sl_map_bin = tr_fc(sl_map)
     if(np.std(pert_sl_map) != 0):
         sl_map_norm = (pert_sl_map-np.mean(pert_sl_map))/(np.std(pert_sl_map))
@@ -21,6 +25,10 @@ def NSS_func(sl_map, pert_sl_map, tr_fc = thr_fc_bin):
     return sum_of_pixel_path/float(count)
 
 def IG_func(sl_map, pert_sl_map, baseline_sl_map, e=1, tr_fc = thr_fc_bin):
+    if np.isnan(sl_map).any():
+        sl_map = np.nan_to_num(sl_map)
+    if np.isnan(pert_sl_map).any():
+        pert_sl_map = np.nan_to_num(pert_sl_map)
     sl_map_bin = tr_fc(sl_map)
     count = 0
     sum_of_pixel = 0.0
@@ -35,6 +43,10 @@ def IG_func(sl_map, pert_sl_map, baseline_sl_map, e=1, tr_fc = thr_fc_bin):
 
 
 def MSE_func(sil_gen, nr, model, perturbation_fc = eurosat_perturbation):
+    if np.isnan(sl_map).any():
+        sl_map = np.nan_to_num(sl_map)
+    if np.isnan(pert_sl_map).any():
+        pert_sl_map = np.nan_to_num(pert_sl_map)
     mask = sil_gen.get_silency_map(nr)
     input_tensor_pert = perturbation_fc(sil_gen.ds[nr][0],mask).unsqueeze(0).cuda()
     input_tensor = sil_gen.ds[nr][0].unsqueeze(0).cuda()
@@ -50,26 +62,10 @@ def MSE_func_mask(pert_input, sil_gen, nr, model, perturbation_fc = eurosat_pert
     return float(torch.sum(((y-y_pert))**2).cpu())
 
 def SIM_func(sl_map, pert_sl_map, no_bins = 20, show = False):
-    upper = np.max([np.max(sl_map),np.max(pert_sl_map)])
-    hist_sl = torch.histogram(torch.from_numpy(sl_map),no_bins,range=(0.0,upper),density = True)
-    hist_pert_sl = torch.histogram(torch.from_numpy(pert_sl_map),no_bins,range=(0.0,upper),density = True)
-    hist_sl_np = hist_sl.hist.numpy()*hist_sl.bin_edges.numpy()[1]
-    hist_pert_sl_np = hist_pert_sl.hist.numpy()*hist_pert_sl.bin_edges.numpy()[1]
-    if show:
-        plt.plot(hist_sl.bin_edges.numpy()[1:],hist_sl.hist.numpy())
-        plt.show()
-        plt.plot(hist_pert_sl.bin_edges.numpy()[1:],hist_pert_sl.hist.numpy())
-        plt.show()
-    return np.sum(np.minimum(hist_sl_np,hist_pert_sl_np))
-
-def CC_func(sl_map, pert_sl_map, no_bins = 20, show = False):
-    """
-    args:
-        sl_map : np.array - silency map of target instance
-        pert_sl_map  : np.array - perturbated silency map of target instance
-        no_bins : int - number of elements in discrete probability distribution
-        show : bool - show histograms
-    """
+    if np.isnan(sl_map).any():
+        sl_map = np.nan_to_num(sl_map)
+    if np.isnan(pert_sl_map).any():
+        pert_sl_map = np.nan_to_num(pert_sl_map)
     upper = np.max([np.max(sl_map),np.max(pert_sl_map)])
     if upper == 0:
         return 1
@@ -82,12 +78,29 @@ def CC_func(sl_map, pert_sl_map, no_bins = 20, show = False):
         plt.show()
         plt.plot(hist_pert_sl.bin_edges.numpy()[1:],hist_pert_sl.hist.numpy())
         plt.show()
-    temp = np.sqrt(np.mean((hist_sl_np*np.linspace(0,1,no_bins)-np.mean(hist_sl_np*np.linspace(0,1,no_bins)))**2)*np.mean((hist_pert_sl_np*np.linspace(0,1,no_bins)-np.mean(hist_pert_sl_np*np.linspace(0,1,no_bins)))**2))
+    return np.sum(np.minimum(hist_sl_np,hist_pert_sl_np))
+
+def CC_func(sl_map, pert_sl_map):
+    """
+    args:
+        sl_map : np.array - silency map of target instance
+        pert_sl_map  : np.array - perturbated silency map of target instance
+        no_bins : int - number of elements in discrete probability distribution
+        show : bool - show histograms
+    """
+    if np.isnan(sl_map).any():
+        sl_map = np.nan_to_num(sl_map)
+    if np.isnan(pert_sl_map).any():
+        pert_sl_map = np.nan_to_num(pert_sl_map)
+    upper = np.max([np.max(sl_map),np.max(pert_sl_map)])
+    if upper == 0:
+        return 0
+    temp = sl_map.std() * pert_sl_map.std()
     if temp == 0:
-        if (np.mean(hist_sl_np) == np.mean(hist_pert_sl_np)) and (np.std(hist_sl_np) == np.std(hist_pert_sl_np)):
+        if (np.mean(sl_map) == np.mean(pert_sl_map)) and (sl_map.std() == pert_sl_map.std()):
             return 1
         return 0
-    cc = np.mean((hist_sl_np*np.linspace(0,1,no_bins)-np.mean(hist_sl_np*np.linspace(0,1,no_bins)))*(hist_pert_sl_np*np.linspace(0,1,no_bins)-np.mean(hist_pert_sl_np*np.linspace(0,1,no_bins))))/(temp)
+    cc = np.cov(np.array([sl_map.flatten(),pert_sl_map.flatten()]))[0,1]/temp
     if np.isnan(cc):
         return 0
     return cc

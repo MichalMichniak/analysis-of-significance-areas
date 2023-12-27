@@ -58,12 +58,12 @@ class FaithfulnessMeasurment:
             sum_ += score_
         return sum_/len(self.ds),score_lst
 
-    def get_CC_scores(self, perturbation_fc=eurosat_perturbation, tr_fc = thr_fc, no_bins = 20):
+    def get_CC_scores(self, perturbation_fc=eurosat_perturbation, tr_fc = thr_fc):
         sum_ = 0.0
         score_lst = []
         for i,tq in zip(range(len(self.ds)),tqdm.tqdm(range(len(self.ds)))):
             sl , pert_sl = self.sil_gen.get_pair_sailency(i,tr_fc=tr_fc,cam_type=self.cam_type,perturbation_func=perturbation_fc)
-            score_ = CC_func(sl , pert_sl, no_bins = no_bins)
+            score_ = CC_func(sl , pert_sl)
             score_lst.append(score_)
             sum_ += score_
         return sum_/len(self.ds),score_lst
@@ -104,6 +104,6 @@ class FaithfulnessMeasurment:
             score_lst[2].append(score_)
             score_ = SIM_func(sl , pert_sl, no_bins=no_bins)
             score_lst[3].append(score_)
-            score_ = CC_func(sl , pert_sl, no_bins = no_bins)
+            score_ = CC_func(sl , pert_sl)
             score_lst[4].append(score_)
         return pd.DataFrame(np.array(score_lst).T, columns=["NSS","IG","MSE","SIM","CC"])
