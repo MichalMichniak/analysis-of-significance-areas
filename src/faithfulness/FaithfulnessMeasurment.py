@@ -11,11 +11,14 @@ from src.faithfulness.metrics import *
 
 
 class FaithfulnessMeasurment:
-    def __init__(self,model, target_layers, ds, cam_type = "grad_cam"):
+    def __init__(self,model, target_layers, ds, cam_type = "grad_cam",model_grad_cam_plus_plus = None):
         self.model = model
         self.ds = ds
         self.cam_type = cam_type
-        self.sil_gen = Silency_map_gen(model, ds, target_layers)
+        if cam_type == "grad_cam":
+            self.sil_gen = Silency_map_gen(model, ds, target_layers)
+        else:
+            self.sil_gen = Silency_map_gen(model_grad_cam_plus_plus, ds, target_layers)
 
     def get_NSS_scores(self, perturbation_fc=eurosat_perturbation, tr_fc = thr_fc, tr_fc_b = thr_fc_bin):
         sum_ = 0.0
@@ -92,7 +95,7 @@ class FaithfulnessMeasurment:
         score_lst = [[],[],[],[],[]]
 
         baseline_im = torch.zeros(self.sil_gen.ds[0][0].shape)
-        baseline_sl = self.sil_gen.get_silency_map_input(baseline_im)
+        baseline_sl = self.sil_gen.get_silency_map_input(baseline_im,cam_type=self.cam_type)
 
         for i,tq in zip(range(len(self.ds)),tqdm.tqdm(range(len(self.ds)))):
             sl , pert_sl, pert_input = self.sil_gen.get_pair_sailency(i,tr_fc=tr_fc,cam_type=self.cam_type,perturbation_func=perturbation_fc,return_perturbated_input=True)

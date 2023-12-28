@@ -7,7 +7,7 @@ import torch
 from src.faithfulness.perturbation import thr_fc
 from src.faithfulness.perturbation import eurosat_perturbation_inverted
 def threshold_fc(silency_map):
-    return thr_fc(silency_map,scale=0.5)
+    return thr_fc(silency_map,scale=1.5)
 
 if __name__ == '__main__':
     # model load:
@@ -36,5 +36,5 @@ if __name__ == '__main__':
     target_layers = [vgg.features[-2]]
     fmeasure = FaithfulnessMeasurment(vgg, target_layers, ds_test)
     
-    data = fmeasure.get_all_same_sl_map(tr_fc=threshold_fc,perturbation_fc=eurosat_perturbation_inverted)
-    data.to_csv("finished/VGG16/faithfulness_metrics_grad_cam_inverted_noise_0_5.csv",index=False)
+    data = fmeasure.get_all_same_sl_map(tr_fc=threshold_fc)
+    data.to_csv("finished/VGG16/faithfulness_metrics_grad_cam_combained_noise_1_5.csv",index=False)
