@@ -41,5 +41,5 @@ if __name__ == '__main__':
     target_layers = [vgg_plus.features[-2]]
     fmeasure = FaithfulnessMeasurment(vgg, target_layers, ds_test,cam_type=cam_type,model_grad_cam_plus_plus=vgg_plus)
     
-    data = fmeasure.get_all_same_sl_map(tr_fc=threshold_fc)
-    data.to_csv("finished/VGG16/faithfulness_metrics_grad_cam_plus_plus_combained_noise_1_5.csv",index=False)
+    data = fmeasure.get_all_same_sl_map(tr_fc=threshold_fc,perturbation_fc=eurosat_perturbation_inverted)
+    data.to_csv("finished/VGG16/faithfulness_metrics_grad_cam_plus_plus_inverted_noise_1_5.csv",index=False)
