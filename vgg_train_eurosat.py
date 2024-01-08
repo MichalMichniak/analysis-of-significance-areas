@@ -10,7 +10,7 @@ import torchvision
 from torch.utils.data import Dataset,DataLoader
 import datetime
 
-from src.EuroSat_dataloaders import Train_Dataset_EuroSat,Test_Dataset_EuroSat
+from src.EuroSat_dataloaders import Train_Dataset_EuroSat,Test_Dataset_EuroSat,Validation_Dataset_EuroSat
 from src.VGG16_model import VGG16_model_transfer
 
 import warnings
@@ -26,7 +26,7 @@ if __name__ == '__main__':
     ])
     ds = EuroSAT("../EuroSat",transform=transforms,target_transform=transformation_eurosat,download=False)
     ds_train = Train_Dataset_EuroSat(ds)
-    ds_test = Test_Dataset_EuroSat(ds)
+    ds_test = Validation_Dataset_EuroSat(ds)
     train_dataloader = DataLoader(dataset=ds_train, batch_size=32,shuffle=True,num_workers=3)
     test_dataloader = DataLoader(dataset=ds_test, batch_size=32,shuffle=True,num_workers=3)
     vgg_16 = VGG16_model_transfer()

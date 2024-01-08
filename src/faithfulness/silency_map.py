@@ -28,7 +28,7 @@ class Silency_map_gen:
             else:
                 with GradCAMPlusPlus(model=self.model, target_layers=self.target_layers, use_cuda=True) as cam:
                     silency_map = cam(input_tensor=input_tensor, targets=targets)
-        return silency_map[0, :]
+        return silency_map[0, :].astype(np.float32)
 
 
     def get_silency_map(self,nr,targets = None, cam_type = "grad_cam"):
@@ -43,7 +43,7 @@ class Silency_map_gen:
         if mask is None:
             mask = self.get_silency_map(nr,targets, cam_type)
             mask = tr_fc(mask)
-        input_tensor = eurosat_perturbation(self.ds[nr][0],mask).unsqueeze(0).cuda()
+        input_tensor = perturbation_func(self.ds[nr][0],mask).unsqueeze(0).cuda()
         if return_perturbated_input:
             return self.get_silency_map_(input_tensor,targets, cam_type),input_tensor
         return self.get_silency_map_(input_tensor,targets, cam_type)

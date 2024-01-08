@@ -29,8 +29,23 @@ class Train_Dataset_EuroSat(Dataset):
         return len(self.train)
     
 class Test_Dataset_EuroSat(Dataset):
+    __test__ = False
     def __init__(self, dataset : Dataset):
         self.test = pd.read_csv("C:\D\VS_programs_python\inzynierka\\analysis-of-significance-areas\\labels\\Eurosat_idx_test.csv")
+        self.dataset_ = dataset
+
+    def __getitem__(self, index):
+        x,y = self.dataset_[self.test.iloc[index]["idx"]]
+        x = x*2 - 1
+        return x ,y
+    
+    def __len__(self):
+        return len(self.test)
+
+class Validation_Dataset_EuroSat(Dataset):
+    __test__ = False
+    def __init__(self, dataset : Dataset):
+        self.test = pd.read_csv("C:\D\VS_programs_python\inzynierka\\analysis-of-significance-areas\\labels\\Eurosat_idx_valid.csv")
         self.dataset_ = dataset
 
     def __getitem__(self, index):

@@ -29,6 +29,7 @@ class VGG16_model_transfer:
                 torch.nn.Dropout(p=0.5, inplace=False),
                 torch.nn.Linear(in_features=4096, out_features=256, bias=True),
                 torch.nn.Dropout(p=0.5, inplace=False),
+                torch.nn.ReLU(inplace=True),
                 torch.nn.Linear(in_features=256, out_features=n_labels, bias=True),
             )
             self.vgg16 = torchvision.models.vgg16(weights = 'DEFAULT', progress=True)

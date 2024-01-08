@@ -110,17 +110,17 @@ test_CC_list = [(np.random.uniform(0,1,[20,20]),np.random.uniform(0,1,[20,20])) 
 def test_CC_func(sl_map, pert_sl_map):
     result = np.cov(np.array([sl_map.flatten(),pert_sl_map.flatten()]))[0,1]/(sl_map.std() * pert_sl_map.std())
     eps= 1e-6
-    assert CC_func(sl_map, pert_sl_map, no_bins = 20, show = False) > result - eps
-    assert CC_func(sl_map, pert_sl_map, no_bins = 20, show = False) < result + eps
-    assert -1<=CC_func(sl_map, pert_sl_map, no_bins = 20, show = False)<=1
+    assert CC_func(sl_map, pert_sl_map) > result - eps
+    assert CC_func(sl_map, pert_sl_map) < result + eps
+    assert -1<=CC_func(sl_map, pert_sl_map)<=1
     pass
 
 test_CC_list2 = [(np.zeros([20]),np.zeros([20]),0),(np.ones([20]),np.ones([20]),1),(np.zeros([20]),np.ones([20]),0)]
 @pytest.mark.parametrize('sl_map, pert_sl_map, result', test_CC_list2)
 def test_CC_func2(sl_map, pert_sl_map,result):
     eps= 1e-6
-    assert CC_func(sl_map, pert_sl_map, no_bins = 20, show = False) > result - eps
-    assert CC_func(sl_map, pert_sl_map, no_bins = 20, show = False) < result + eps
+    assert CC_func(sl_map, pert_sl_map) > result - eps
+    assert CC_func(sl_map, pert_sl_map) < result + eps
     pass
 
 

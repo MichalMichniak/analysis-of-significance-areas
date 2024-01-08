@@ -13,7 +13,7 @@ from src.EuroSat_dataloaders import Train_Dataset_EuroSat,Test_Dataset_EuroSat
 from src.ResNet50_model import ResNet50_model_transfer
 import datetime
 
-from src.EuroSat_dataloaders import Train_Dataset_EuroSat,Test_Dataset_EuroSat
+from src.EuroSat_dataloaders import Train_Dataset_EuroSat,Test_Dataset_EuroSat,Validation_Dataset_EuroSat
 
 
 import warnings
@@ -29,11 +29,11 @@ if __name__ == '__main__':
     ])
     ds = EuroSAT("../EuroSat",transform=transforms,target_transform=transformation_eurosat,download=False)
     ds_train = Train_Dataset_EuroSat(ds)
-    ds_test = Test_Dataset_EuroSat(ds)
+    ds_test = Validation_Dataset_EuroSat(ds)
     train_dataloader = DataLoader(dataset=ds_train, batch_size=32,shuffle=True,num_workers=3)
     test_dataloader = DataLoader(dataset=ds_test, batch_size=32,shuffle=True,num_workers=3)
     resnet50 = ResNet50_model_transfer()
-    resnet50.load(10,True,conv_layers_train=True)
+    resnet50.load(10,False,conv_layers_train=True)
     train_loss,test_loss,train_accuracy,test_accuracy = resnet50.train(36,train_dataloader,test_dataloader)
     print(train_loss,test_loss,train_accuracy,test_accuracy)
     date = f"{datetime.datetime.now()}"

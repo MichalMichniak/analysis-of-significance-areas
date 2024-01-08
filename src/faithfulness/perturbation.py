@@ -14,7 +14,7 @@ def thr_fc_bin(silency_map):
     binaryzation of silency map
     """
     silency_map = silency_map > np.mean(silency_map)
-    return silency_map 
+    return silency_map.astype(np.float64)
 
 def eurosat_perturbation(input,mask):
     # mask is a binary map where perturbate image
@@ -28,10 +28,8 @@ def eurosat_perturbation(input,mask):
     mul_noise = np.zeros(input.shape)
     additive_noise = np.zeros(input.shape)
     for i in range(3):
-        mul_noise[i] = (1+np.random.normal(mean[i],2*sigma[i],size = input[0].shape)*mask)
-    for i in range(3):
-        mul_noise = (1+np.random.normal(mean[i],2*sigma[i],size = input[0].shape)*mask)
-        additive_noise[i] = np.random.normal(mean[i],sigma[i],size = input[0].shape)
+        mul_noise[i] = (1+np.random.normal(0,2*sigma[i],size = input[0].shape)*mask)
+        additive_noise[i] = np.random.normal(0,sigma[i],size = input[0].shape)
     return torch.mul(input,torch.from_numpy(mul_noise).float()) + (torch.from_numpy(additive_noise).float()*mask)
 
 def eurosat_perturbation_inverted(input,mask):
@@ -44,8 +42,6 @@ def eurosat_perturbation_inverted(input,mask):
     mul_noise = np.zeros(input.shape)
     additive_noise = np.zeros(input.shape)
     for i in range(3):
-        mul_noise[i] = (1+np.random.normal(mean[i],2*sigma[i],size = input[0].shape)*mask)
-    for i in range(3):
-        mul_noise = (1+np.random.normal(mean[i],2*sigma[i],size = input[0].shape)*mask)
-        additive_noise[i] = np.random.normal(mean[i],sigma[i],size = input[0].shape)
+        mul_noise[i] = (1+(np.random.normal(0,2*sigma[i],size = input[0].shape)*mask))
+        additive_noise[i] = np.random.normal(0,sigma[i],size = input[0].shape)
     return 1-torch.mul(1-input,torch.from_numpy(mul_noise).float()) + (torch.from_numpy(additive_noise).float()*mask)

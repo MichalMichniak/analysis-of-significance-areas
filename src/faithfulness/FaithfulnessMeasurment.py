@@ -30,7 +30,7 @@ class FaithfulnessMeasurment:
             sum_ += score_
         return sum_/len(self.ds),score_lst
 
-    def get_IG_scores(self, perturbation_fc=eurosat_perturbation, e=1, tr_fc = thr_fc, tr_fc_b = thr_fc_bin):
+    def get_IG_scores(self, perturbation_fc=eurosat_perturbation, e=0.1, tr_fc = thr_fc, tr_fc_b = thr_fc_bin):
         sum_ = 0.0
         baseline_im = torch.zeros(self.sil_gen.ds[0][0].shape)
         baseline_sl = self.sil_gen.get_silency_map_input(baseline_im)
@@ -91,7 +91,7 @@ class FaithfulnessMeasurment:
         data.to_csv("finished/ResNet50/faithfulness_metrics_CC.csv",index=False)
         return pd.DataFrame(np.array(lst_scores).T, columns=["NSS","IG","MSE","SIM","CC"])
     
-    def get_all_same_sl_map(self, perturbation_fc=eurosat_perturbation, tr_fc = thr_fc, no_bins = 20, tr_fc_b = thr_fc_bin, e=1):
+    def get_all_same_sl_map(self, perturbation_fc=eurosat_perturbation, tr_fc = thr_fc, no_bins = 20, tr_fc_b = thr_fc_bin, e=0.1):
         score_lst = [[],[],[],[],[]]
 
         baseline_im = torch.zeros(self.sil_gen.ds[0][0].shape)
