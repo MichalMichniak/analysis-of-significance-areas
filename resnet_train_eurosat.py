@@ -33,7 +33,7 @@ if __name__ == '__main__':
     train_dataloader = DataLoader(dataset=ds_train, batch_size=32,shuffle=True,num_workers=3)
     test_dataloader = DataLoader(dataset=ds_test, batch_size=32,shuffle=True,num_workers=3)
     resnet50 = ResNet50_model_transfer()
-    resnet50.load(10,False,conv_layers_train=True)
+    resnet50.load(10,True,conv_layers_train=True)
     train_loss,test_loss,train_accuracy,test_accuracy = resnet50.train(36,train_dataloader,test_dataloader)
     print(train_loss,test_loss,train_accuracy,test_accuracy)
     date = f"{datetime.datetime.now()}"
