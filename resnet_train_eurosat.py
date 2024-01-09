@@ -27,7 +27,7 @@ if __name__ == '__main__':
         v2.ToDtype(torch.float32),
         v2.Resize(224),
     ])
-    ds = EuroSAT("../EuroSat",transform=transforms,target_transform=transformation_eurosat,download=False)
+    ds = EuroSAT("../EuroSat",transform=transforms,target_transform=transformation_eurosat,download=True)
     ds_train = Train_Dataset_EuroSat(ds)
     ds_test = Validation_Dataset_EuroSat(ds)
     train_dataloader = DataLoader(dataset=ds_train, batch_size=32,shuffle=True,num_workers=3)

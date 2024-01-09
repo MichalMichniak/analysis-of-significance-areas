@@ -17,7 +17,7 @@ def transformation_eurosat(target):
 
 class Train_Dataset_EuroSat(Dataset):
     def __init__(self, dataset : Dataset):
-        self.train = pd.read_csv("C:\D\VS_programs_python\inzynierka\\analysis-of-significance-areas\\labels\\Eurosat_idx_train.csv")
+        self.train = pd.read_csv(".\labels\\Eurosat_idx_train.csv")
         self.dataset_ = dataset
 
     def __getitem__(self, index):
@@ -31,7 +31,7 @@ class Train_Dataset_EuroSat(Dataset):
 class Test_Dataset_EuroSat(Dataset):
     __test__ = False
     def __init__(self, dataset : Dataset):
-        self.test = pd.read_csv("C:\D\VS_programs_python\inzynierka\\analysis-of-significance-areas\\labels\\Eurosat_idx_test.csv")
+        self.test = pd.read_csv(".\labels\\Eurosat_idx_test.csv")
         self.dataset_ = dataset
 
     def __getitem__(self, index):
@@ -45,7 +45,7 @@ class Test_Dataset_EuroSat(Dataset):
 class Validation_Dataset_EuroSat(Dataset):
     __test__ = False
     def __init__(self, dataset : Dataset):
-        self.test = pd.read_csv("C:\D\VS_programs_python\inzynierka\\analysis-of-significance-areas\\labels\\Eurosat_idx_valid.csv")
+        self.test = pd.read_csv(".\labels\\Eurosat_idx_valid.csv")
         self.dataset_ = dataset
 
     def __getitem__(self, index):
