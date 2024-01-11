@@ -10,8 +10,8 @@ class Silency_map_gen:
         self.model = model
         self.ds = dataset
         self.target_layers = target_layers
-        self.grad_cam = GradCAM(model=model, target_layers=target_layers, use_cuda=True)
-        self.grad_cam_plus_plus = GradCAMPlusPlus(model=model, target_layers=target_layers, use_cuda=True)
+        self.grad_cam = GradCAM(model=model, target_layers=target_layers)
+        self.grad_cam_plus_plus = GradCAMPlusPlus(model=model, target_layers=target_layers)
         pass
     
     def get_silency_map_(self,input_tensor ,targets = None, cam_type = "grad_cam"):
@@ -20,13 +20,13 @@ class Silency_map_gen:
             if targets == None:
                 silency_map = self.grad_cam(input_tensor=input_tensor, targets=targets)
             else:
-                with GradCAM(model=self.model, target_layers=self.target_layers, use_cuda=True) as cam:
+                with GradCAM(model=self.model, target_layers=self.target_layers) as cam:
                     silency_map = cam(input_tensor=input_tensor, targets=targets)
         else:
             if targets == None:
                 silency_map = self.grad_cam_plus_plus(input_tensor=input_tensor, targets=targets)
             else:
-                with GradCAMPlusPlus(model=self.model, target_layers=self.target_layers, use_cuda=True) as cam:
+                with GradCAMPlusPlus(model=self.model, target_layers=self.target_layers) as cam:
                     silency_map = cam(input_tensor=input_tensor, targets=targets)
         return silency_map[0, :].astype(np.float32)
 

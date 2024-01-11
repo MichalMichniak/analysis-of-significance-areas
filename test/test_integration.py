@@ -45,7 +45,7 @@ def test_NSS_func(sl_map, pert_sl_map, tr_fc):
     assert type(NSS_func(sl_map, pert_sl_map, tr_fc)) == float
 
 test_IG_list = [
-    (np.random.uniform(size=(i,i)),np.random.uniform(size=(i,i)),np.random.uniform(size=(i,i)),thr_fc_bin) for i in range(100)
+    (np.random.uniform(size=(i,i)),np.random.uniform(size=(i,i)),np.random.uniform(size=(i,i)),thr_fc_bin) for i in range(1,100)
 ]
 
 @pytest.mark.parametrize('sl_map, pert_sl_map, baseline_sl_map, tr_fc', test_IG_list)

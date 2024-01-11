@@ -6,7 +6,10 @@ def thr_fc(silency_map, scale=1):
     """
     weighted mask of silency map
     """
-    silency_map = (silency_map > np.mean(silency_map))*np.minimum(((silency_map-np.mean(silency_map))*scale/(np.max(silency_map)-np.mean(silency_map)))*2,scale)
+    if(np.max(silency_map)-np.mean(silency_map) != 0):
+        silency_map = (silency_map > np.mean(silency_map))*np.minimum(((silency_map-np.mean(silency_map))*scale/(np.max(silency_map)-np.mean(silency_map)))*2,scale)
+    else:
+        return (silency_map > np.mean(silency_map)).astype(float)
     return silency_map
 
 def thr_fc_bin(silency_map):
